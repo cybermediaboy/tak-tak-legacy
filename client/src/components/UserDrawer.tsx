@@ -4,9 +4,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { units as allUnits, spaces, formatNum, PITCH_RU, PLATFORM_PRINCIPLES, DOMAINS, REVENUE_PASS_TIERS, type UnitManifest } from '@/lib/taktak-data';
+import { units as allUnits, spaces, formatNum, PITCH_RU, PLATFORM_PRINCIPLES, DOMAINS, REVENUE_PASS_TIERS, VERBS_CONSTELLATION, POSITIONING_FRAME, type UnitManifest } from '@/lib/taktak-data';
+import { ImportView } from './ImportView';
 
-export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings' | 'about' | 'pass';
+export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings' | 'about' | 'pass' | 'import';
 
 interface CurrentUser {
   id: string;
@@ -91,6 +92,7 @@ export function UserDrawer({ onClose, initialView = 'menu' }: { onClose: () => v
             {view === 'earnings' && <EarningsView />}
             {view === 'about' && <AboutView />}
             {view === 'pass' && <PassView />}
+            {view === 'import' && <ImportView />}
             {view === 'profile' && <PlaceholderView title="Профиль" body="Здесь будет публичный профиль, гильдия, репутация, верификации." />}
             {view === 'posts' && <PlaceholderView title="Мои посты" body="Список ваших юнитов, статистика просмотров, версий, форков." />}
             {view === 'subs' && <PlaceholderView title="Подписки" body="Спейсы, на которые вы подписаны. Управление лентой For You." />}
@@ -111,6 +113,7 @@ function UserMenu({ onPick }: { onPick: (v: UserView) => void }) {
   const items: { id: UserView; icon: string; label: string; meta?: string; accent?: boolean }[] = [
     { id: 'earnings', icon: '◉', label: 'Earnings', meta: `$${totals.todayUsd.toFixed(2)} сегодня · $${totals.totalUsd.toFixed(2)} всего`, accent: true },
     { id: 'pass',     icon: '◆', label: 'Revenue Pass', meta: '4 тира · от бесплатного до collectible' },
+    { id: 'import',   icon: '⤓', label: 'Перенести мой контент', meta: 'TT · IG · YT · X · RSS · Mastodon · BlueSky' },
     { id: 'posts',    icon: '⊞', label: 'Мои посты', meta: `${totals.myPosts} юнитов · ${formatNum(totals.totalViews)} просмотров` },
     { id: 'subs',     icon: '✦', label: 'Подписки', meta: `${spaces.length - 1} каналов` },
     { id: 'profile',  icon: '◯', label: 'Профиль', meta: `@${currentUser.handle}` },

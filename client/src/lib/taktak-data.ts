@@ -475,6 +475,13 @@ export const spaces: Space[] = [
     subscribers: 4_120, curator: authors.community,
     templateId: 't1', templatePin: 'a91c4f2', templateUpdatesAvailable: 0,
   },
+  {
+    id: 's10', handle: 'hire', name: 'Hire',
+    description: 'Двусторонний gig-marketplace: фирмы постят заявки, операторы — офферы. Profile-флаг «◯ for hire» = фильтр.  Manage · Design · Code · Respin · Traffic · Video.',
+    cover: 'from-amber-500/40 to-emerald-500/30', icon: '🤝',
+    subscribers: 12_640, curator: authors.community,
+    templateId: 't1', templatePin: 'a91c4f2', templateUpdatesAvailable: 0,
+  },
 ];
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1025,6 +1032,85 @@ export const units: UnitManifest[] = [
     createdAt: '2026-06-21T07:00:00Z',
     origin: 'handmade', appDescription: 'Голосование по treasury',
   },
+
+  // ── s10 · Hire ──────────────────────────────────────────────────────
+  // gig-marketplace. content-юниты = gig-request (фирма ищет)
+  // или gig-offer (оператор предлагает).
+
+  {
+    id: 'u40', kind: 'content', title: 'Ищу designer · unit-overlay для Phaedra · 2 недели · $800',
+    subtitle: 'gig-request · brand-owner · брендированный overlay для Brick & Mortar юнитов',
+    author: authors.costa, spaceId: 's10',
+    env: ['node:20'], mcp: [],
+    payload: {
+      body: 'Ищу freelance-дизайнера на overlay для серии юнитов Phaedra Coffee.\n\nScope: 1 базовый overlay-template + 4 вариации (latte / cortado / filter / V60). Векторы, hot-stamp foil-ready, ISO 7810 ratio (синхронизация с Designer Card tier).\n\nDeliverables: .svg + .pdf print-ready, RGB+Pantone, 1 раунд правок включён.\n\nDeadline: 2 недели · Bid: $800 fixed (escrow on-spin).',
+      readingMinutes: 1,
+      gigKind: 'design',
+      gigSide: 'request',
+      bidUsd: 800,
+      deadlineDays: 14,
+    },
+    license: { kind: 'free' },
+    stats: { views: 1_240, spins: 0, cherries: 38, givers: 0 },
+    generation: 0, branch: 'main', commitHash: nextCommit(), forks: 0, openPRs: 0, registryHash: nextHash(),
+    createdAt: '2026-06-20T11:00:00Z',
+    origin: 'handmade', appDescription: 'Gig request — design',
+  },
+  {
+    id: 'u41', kind: 'content', title: 'Нужен manager для странички фирмы · monthly · $1.2k/мес',
+    subtitle: 'gig-request · brand-owner · постинг, модерация, аналитика, Respin queue',
+    author: authors.costa, spaceId: 's10',
+    env: ['node:20'], mcp: [],
+    payload: {
+      body: 'Phaedra Coffee ищет оператора, который ведёт страничку фирмы в Tak-Tak.\n\nЗадачи: 8–12 юнитов в месяц (контент-план + продакшн), модерация comments, weekly Respin-отчёт, синхронизация с brand-card (t3) layer.\n\nКомпенсация: $1 200/мес patronage + 10 % attribution от Respin-доходов.\n\nТребования: rep 60+, опыт в Brick & Mortar или Slow Market, Russian + English.',
+      readingMinutes: 1,
+      gigKind: 'manage',
+      gigSide: 'request',
+      bidUsd: 1200,
+      deadlineDays: 30,
+    },
+    license: { kind: 'free' },
+    stats: { views: 980, spins: 0, cherries: 22, givers: 0 },
+    generation: 0, branch: 'main', commitHash: nextCommit(), forks: 0, openPRs: 0, registryHash: nextHash(),
+    createdAt: '2026-06-19T15:00:00Z',
+    origin: 'handmade', appDescription: 'Gig request — manage',
+  },
+  {
+    id: 'u42', kind: 'content', title: 'Делаю respins профессионально · от $40/юнит',
+    subtitle: 'gig-offer · Ivan P. · адаптация tools/agents под ваш стек, MCP-биндинг',
+    author: authors.ivan, spaceId: 's10',
+    env: ['node:20'], mcp: [],
+    payload: {
+      body: '◯ for hire · open\n\nКого беру: brand-owner, индивидуальный автор, агентство.\n\nЧто делаю:\n• Respin tools/agents под ваш MCP-стек ($40+/юнит)\n• Кастом env (python:3.11, node:20, wasm-sandbox)\n• Wire-up в Pocket Tools или Agents Guild\n• Production-grade: error handling, rate-limits, observability\n\nExamples: см. @ivan.builds · 42 опубликованных Respin, средний rep-bump +3.\n\nОплата: spinPrice-share (revenueShareBps 1000) или fixed (escrow).',
+      readingMinutes: 1,
+      gigKind: 'respin',
+      gigSide: 'offer',
+      bidUsd: 40,
+    },
+    license: { kind: 'free' },
+    stats: { views: 2_400, spins: 0, cherries: 142, givers: 8 },
+    generation: 0, branch: 'main', commitHash: nextCommit(), forks: 0, openPRs: 0, registryHash: nextHash(),
+    createdAt: '2026-06-18T10:00:00Z',
+    origin: 'handmade', appDescription: 'Gig offer — respin',
+  },
+  {
+    id: 'u43', kind: 'content', title: 'Traffic-нагон для запуска юнита · от $120',
+    subtitle: 'gig-offer · Oren A. · cross-space промо, агент-driven distribution',
+    author: authors.oren, spaceId: 's10',
+    env: ['node:20'], mcp: [],
+    payload: {
+      body: '◯ for hire · open\n\nЧто: организую первичный traffic-pulse для запуска нового юнита/спейса.\n\nКак (не платная реклама — органика + curation):\n• Cross-space реферал-цепочка через Pocket Tools / Agents\n• Заходы к 4-7 curators-партнёрам со совместимыми спейсами\n• Респин-сид через сеть operators (rep 60+)\n\nТипичный результат: 800-1 500 уникальных views в первые 72 ч.\n\nЦена: $120 base + 5 % attribution от первого месяца earnings.',
+      readingMinutes: 1,
+      gigKind: 'traffic',
+      gigSide: 'offer',
+      bidUsd: 120,
+    },
+    license: { kind: 'free' },
+    stats: { views: 1_810, spins: 0, cherries: 88, givers: 4 },
+    generation: 0, branch: 'main', commitHash: nextCommit(), forks: 0, openPRs: 0, registryHash: nextHash(),
+    createdAt: '2026-06-17T16:00:00Z',
+    origin: 'handmade', appDescription: 'Gig offer — traffic',
+  },
 ];
 
 // Quick lookups
@@ -1087,38 +1173,66 @@ export const TAGLINE_EN =
 
 // Russian pitch — three differentiators vs TikTok, locked 22 Jun 2026.
 // Translated from user's Ukrainian original; Russian preferred as primary language.
+export const POSITIONING_FRAME = {
+  wedge: 'invest',
+  cover:
+    'Так-Так — первая платформа, где ты вкладываешь деньги ' +
+    'в создателей, которых уже смотришь.',
+  subline:
+    'Не типы. Не подписка. Доля в ревеню: ребёнок растёт — растёшь и ты.',
+  oneLineEN:
+    'Tak-Tak — the first platform where you invest money in the creators you already watch.',
+} as const;
+
+export const VERBS_CONSTELLATION = [
+  { id: 'invest', glyph: '◉', label: 'Invest', role: 'wedge',
+    body: 'Ставь деньги на создателя, а не на рекламный алгоритм. Revenue Pass = receipt.' },
+  { id: 'watch', glyph: '▶', label: 'Watch', role: 'companion',
+    body: 'Лента — это due diligence. Каждый юнит = открытый манифест создателя.' },
+  { id: 'buy', glyph: '◈', label: 'Buy', role: 'companion',
+    body: 'Одним кликом — заказ или подарок в коробочке. Коммерция — вторым экраном.' },
+  { id: 'hire', glyph: '⤓', label: 'Hire', role: 'companion',
+    body: 'Инвесторы нанимают тех, кого инвестировали. Hire-space — нативный gig-рынок.' },
+  { id: 'import', glyph: '↩', label: 'Import', role: 'companion',
+    body: 'Создатель приносит аудиторию: TT/IG/YT/X через OAuth или archive ZIP.' },
+  { id: 'own', glyph: '◆', label: 'Own', role: 'companion',
+    body: 'Revenue Pass = физическая карта + collectible. История инвестиций = identity.' },
+] as const;
+
 export const PITCH_RU = {
   oneLiner:
-    'Tak-Tak — это как TikTok, только можно инвестировать друг в друга, ' +
-    'добавлять к контенту бизнес-интерактив за секунды и запрещать ' +
-    'Google и другим тренироваться на твоём контенте.',
+    'Так-Так — первая платформа, где ты вкладываешь деньги в создателей, ' +
+    'которых уже смотришь. Не типы. Не подписка. Доля в ревеню: ' +
+    'ребёнок растёт — растёшь и ты.',
+  subline:
+    'Контент-first, коммерция-second. Смотришь · инвестируешь · покупаешь · нанимаешь — вокруг одной вербы.',
   differentiators: [
     {
-      id: 'peer-investment',
-      icon: '♡',
-      title: 'Взаимные инвестиции',
+      id: 'invest-not-tip',
+      icon: '◉',
+      title: 'Инвестиция, не чаевые',
       body:
-        'Кнопка Give вместо лайка. Ссылки в тексте бывают двух цветов: ' +
-        'серая charity — бескорыстная, амбер commission — с долей автору-рефереру. ' +
-        'Investment-спейс: эксперты публикуют тезисы, ты решаешь, кого поддержать.',
+        'Patreon и OnlyFans = подписка. Tip-jar = подарок. ' +
+        'Тут — доля в будущем ревеню юнита: Give при спине · доля attribution · ' +
+        'Investment-спейс с экспертными тезисами. Юнит растёт — растёшь и ты.',
     },
     {
-      id: 'business-interactive',
-      icon: '⚡',
-      title: 'Бизнес-интерактив за секунды',
+      id: 'content-first-commerce-second',
+      icon: '▶',
+      title: 'Контент-first, коммерция-second',
       body:
-        '«Хочу такие кнопки или меню, как у этого магазина» — AI добавляет ' +
-        'к посту интерактивный и бизнес-функционал (заказ, бронь, голосование, ' +
-        'калькулятор, агент). Каждый юнит — это маленькое приложение с прозрачным манифестом.',
+        'Можешь листать всякую фигню — как в TikTok. А можешь одним кликом ' +
+        'заказать, инвестировать, нанять или отправить подарок в коробочке. ' +
+        'Интерактив встроен в сам юнит, не в «Shop»-вкладку.',
     },
     {
-      id: 'no-ai-training',
+      id: 'counter-positioning',
       icon: '⊘',
-      title: 'Google не тренируется на тебе',
+      title: 'Инкумбенты не могут скопировать',
       body:
-        'По умолчанию каждый юнит запрещает индексацию для AI-тренировок. ' +
-        'Хочешь — открываешь allowlist для конкретных краулеров. ' +
-        'Tak-Tak — антитеза «бесплатной фермы данных» для больших моделей.',
+        'Instagram · Etsy · Patreon · Fiverr не могут ввести creator-equity — это ' +
+        'съест их собственную комиссию. Hamilton Helmer (7 Powers) называет ' +
+        'это counter-positioning. AI-training = deny по умолчанию. Рекламы в ленте нет.',
     },
   ],
 } as const;
