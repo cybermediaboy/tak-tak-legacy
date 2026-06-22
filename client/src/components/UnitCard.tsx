@@ -111,7 +111,7 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceIn
             onPointerLeave={(e) => { window.clearTimeout((e.currentTarget as any)._lpTimer); }}
             data-testid={`corner-info-${unit.id}`}
             title="Тап: о Space-шаблоне · Долгий тап: манифест юнита"
-            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-white/30 hover:bg-white/55 backdrop-blur-sm border border-white/60 flex items-center justify-center text-white transition-colors text-[12px] font-semibold shadow-sm"
+            className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/30 hover:bg-white/55 backdrop-blur-sm border border-white/60 flex items-center justify-center text-white transition-colors text-[13px] font-semibold shadow-sm"
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}
           >
             ⓘ
@@ -121,9 +121,10 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceIn
         {!flipped && (
           <div className="absolute inset-0 flex flex-col">
             {/* Header: author + license — NO tech data.
-                pt-12 keeps it clear of the single-row floating TopBar capsule. */}
+                Card itself now starts below the floating TopBar (Feed gives top inset),
+                so header only needs internal padding. */}
             <header
-              className="flex items-start justify-between px-5 pt-14 pb-3 shrink-0 gap-3 cursor-pointer"
+              className="flex items-start justify-between px-5 pt-4 pb-3 shrink-0 gap-3 cursor-pointer"
               onClick={handleHeaderDoubleTap}
               onTouchEnd={handleHeaderDoubleTap}
               title="Двойной тап — fullscreen · pinch-out — fullscreen · pinch-in / ESC — выход"
@@ -198,7 +199,7 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceIn
 
         {flipped && (
           <div className="absolute inset-0 flex flex-col bg-white">
-            <header className="flex items-center justify-between px-5 pt-14 pb-3 border-b border-black/8 shrink-0 pr-16">
+            <header className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-black/8 shrink-0 pr-16">
               <div>
                 <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Manifest</div>
                 <h3 className="font-display text-base mt-0.5 truncate">{unit.title}</h3>

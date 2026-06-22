@@ -284,8 +284,12 @@ export default function Feed() {
         </button>
       )}
 
-      {/* Card fills the entire viewport. TopBar and BottomDock float over it as glass capsules. */}
-      <div className="absolute inset-0 flex items-stretch justify-center">
+      {/* Card area starts BELOW the floating single-row TopBar to avoid any visual overlap.
+          Top inset reserves space for the strip + small gap; bottom keeps the dock free. */}
+      <div
+        className="absolute inset-x-0 bottom-0 flex items-stretch justify-center"
+        style={{ top: fullscreen ? 0 : 68 }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={`${space.id}-${unit?.id ?? 'empty'}`}
