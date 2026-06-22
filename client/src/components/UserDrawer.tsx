@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { units as allUnits, spaces, formatNum, type UnitManifest } from '@/lib/taktak-data';
+import { units as allUnits, spaces, formatNum, PITCH_RU, PLATFORM_PRINCIPLES, DOMAINS, type UnitManifest } from '@/lib/taktak-data';
 
-export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings';
+export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings' | 'about';
 
 interface CurrentUser {
   id: string;
@@ -89,6 +89,7 @@ export function UserDrawer({ onClose, initialView = 'menu' }: { onClose: () => v
           <div className="px-4 py-4">
             {view === 'menu' && <UserMenu onPick={setView} />}
             {view === 'earnings' && <EarningsView />}
+            {view === 'about' && <AboutView />}
             {view === 'profile' && <PlaceholderView title="Профиль" body="Здесь будет публичный профиль, гильдия, репутация, верификации." />}
             {view === 'posts' && <PlaceholderView title="Мои посты" body="Список ваших юнитов, статистика просмотров, версий, форков." />}
             {view === 'subs' && <PlaceholderView title="Подписки" body="Спейсы, на которые вы подписаны. Управление лентой For You." />}
@@ -111,6 +112,7 @@ function UserMenu({ onPick }: { onPick: (v: UserView) => void }) {
     { id: 'posts',    icon: '⊞', label: 'Мои посты', meta: `${totals.myPosts} юнитов · ${formatNum(totals.totalViews)} просмотров` },
     { id: 'subs',     icon: '✦', label: 'Подписки', meta: `${spaces.length - 1} каналов` },
     { id: 'profile',  icon: '◯', label: 'Профиль', meta: `@${currentUser.handle}` },
+    { id: 'about',    icon: '✰', label: 'О Tak-Tak', meta: 'Питч, принципы, домены' },
     { id: 'settings', icon: '⚙', label: 'Настройки', meta: 'Кошелёк, ключи, экспорт' },
   ];
 
@@ -426,6 +428,88 @@ function CardRow({ c }: { c: PerCardEarning }) {
           live · ${c.rateUsdPerHour.toFixed(3)}/hour
         </div>
       )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// About view — canonical pitch + 3 differentiators + platform principles + cross-domain.
+// Single source of truth — strings live in @/lib/taktak-data.
+// ──────────────────────────────────────────────────────────────────────────────
+
+function AboutView() {
+  return (
+    <div className="space-y-5" data-testid="view-about">
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono mb-2">
+          Что такое Tak-Tak
+        </div>
+        <p className="text-[14px] leading-relaxed text-[#1A1A1A]">
+          {PITCH_RU.oneLiner}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono">
+          Три отличия от TikTok
+        </div>
+        {PITCH_RU.differentiators.map(d => (
+          <div
+            key={d.id}
+            data-testid={`about-diff-${d.id}`}
+            className="rounded-xl border border-black/5 bg-white/70 px-3 py-3"
+          >
+            <div className="flex items-baseline gap-2">
+              <span className="text-base text-[#2E7D32]">{d.icon}</span>
+              <div className="font-medium text-[13px] text-[#1A1A1A]">{d.title}</div>
+            </div>
+            <p className="mt-1 text-[12px] leading-relaxed text-[#3a4148]">{d.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono">
+          Принципы платформы
+        </div>
+        {PLATFORM_PRINCIPLES.map(p => (
+          <div
+            key={p.id}
+            data-testid={`about-principle-${p.id}`}
+            className="rounded-lg bg-black/[0.03] border border-black/5 px-3 py-2.5"
+          >
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm text-[#F59E0B]">{p.icon}</span>
+              <div className="text-[12px] font-medium text-[#1A1A1A]">{p.title}</div>
+            </div>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[#3a4148]">{p.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono">
+          Домены
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {([DOMAINS.mvp, DOMAINS.docs] as const).map(d => (
+            <a
+              key={d.url}
+              href={d.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-black/5 bg-white/70 px-3 py-2.5 block hover:bg-white"
+            >
+              <div className="text-[11px] font-mono text-[#1A1A1A] truncate">{d.label}</div>
+              <div className="text-[10px] text-[#6B7785]">{d.role}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-1 text-[10px] font-mono text-[#6B7785] uppercase tracking-wider">
+        web 4.0 · Tak-Tak v0.7.2
+      </div>
     </div>
   );
 }

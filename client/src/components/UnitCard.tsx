@@ -28,6 +28,7 @@ interface Props {
   unit: UnitManifest;
   onAction: (action: 'respin' | 'give' | 'cherry' | 'react' | 'share', unit: UnitManifest) => void;
   onLinkClick?: (targetUnitId: string) => void;
+  onOpenSpaceInfo?: () => void;
 }
 
 // Origin colour map — diagonal ribbon in the corner uses these.
@@ -38,7 +39,22 @@ const ORIGIN_STYLE = {
   freelanced: { color: '#F9A825', ru: 'Через гильдию',    icon: '⚑', label: 'Freelanced' },
 } as const;
 
-export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
+// Double-tap detector — fires window event picked up by Feed to toggle fullscreen.
+let lastTap = 0;
+function handleHeaderDoubleTap(e: React.MouseEvent | React.TouchEvent) {
+  const target = e.target as HTMLElement;
+  // Ignore taps on interactive children (buttons, links).
+  if (target.closest('button, a, [role="button"]')) return;
+  const now = Date.now();
+  if (now - lastTap < 350) {
+    window.dispatchEvent(new CustomEvent('taktak:toggle-fullscreen'));
+    lastTap = 0;
+  } else {
+    lastTap = now;
+  }
+}
+
+export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceInfo }: Props) {
   const [flipped, setFlipped] = useState(false);
   const space = spaces.find(s => s.id === unit.spaceId);
   const template: SpaceTemplate | undefined = space ? templatesById[space.templateId] : undefined;
@@ -74,13 +90,29 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
             style={{ background: origin.color, clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
           />
         </div>
-        {/* Info button over the triangle — opens manifest. */}
+        {/* Info button — sits directly on the origin corner triangle (white-on-color, glassy).
+            Single tap: opens Space template manifest (engine, economy, forks).
+            Long press (≥450ms): flips card to unit manifest. */}
         {!flipped && (
           <button
-            onClick={(e) => { e.stopPropagation(); setFlipped(true); }}
-            data-testid={`flip-front-${unit.id}`}
-            title={`Манифест · ${origin.ru}`}
-            className="absolute top-14 right-3 z-20 w-7 h-7 rounded-full bg-white/85 hover:bg-white border border-black/10 flex items-center justify-center text-[#1A1A1A] transition-colors text-xs shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              if ((e as any)._longPressFired) { (e as any)._longPressFired = false; return; }
+              if (onOpenSpaceInfo) onOpenSpaceInfo();
+            }}
+            onPointerDown={(e) => {
+              const t = window.setTimeout(() => {
+                (e.currentTarget as any)._longPressFired = true;
+                setFlipped(true);
+              }, 450);
+              (e.currentTarget as any)._lpTimer = t;
+            }}
+            onPointerUp={(e) => { window.clearTimeout((e.currentTarget as any)._lpTimer); }}
+            onPointerLeave={(e) => { window.clearTimeout((e.currentTarget as any)._lpTimer); }}
+            data-testid={`corner-info-${unit.id}`}
+            title="Тап: о Space-шаблоне · Долгий тап: манифест юнита"
+            className="absolute top-1.5 right-1.5 z-20 w-6 h-6 rounded-full bg-white/30 hover:bg-white/55 backdrop-blur-sm border border-white/60 flex items-center justify-center text-white transition-colors text-[12px] font-semibold shadow-sm"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}
           >
             ⓘ
           </button>
@@ -89,8 +121,13 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
         {!flipped && (
           <div className="absolute inset-0 flex flex-col">
             {/* Header: author + license — NO tech data.
-                pt-16 keeps it clear of the floating TopBar capsule. */}
-            <header className="flex items-start justify-between px-5 pt-16 pb-3 shrink-0 gap-3">
+                pt-12 keeps it clear of the single-row floating TopBar capsule. */}
+            <header
+              className="flex items-start justify-between px-5 pt-14 pb-3 shrink-0 gap-3 cursor-pointer"
+              onClick={handleHeaderDoubleTap}
+              onTouchEnd={handleHeaderDoubleTap}
+              title="Двойной тап — fullscreen · pinch-out — fullscreen · pinch-in / ESC — выход"
+            >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <AuthorAvatar unit={unit} />
                 <div className="min-w-0">
@@ -105,7 +142,9 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
               </div>
               {/* Right-aligned chip cluster: for-hire next to license (patronage/free/paid).
                   Both chips live on the right side, balanced against the origin triangle in the corner. */}
-              <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end max-w-[55%] pr-9">
+              {/* Right-side meta — license is now communicated via ActionRail (color of RESPIN button)
+                  + flip-back manifest. Only 'for hire' chip remains here. */}
+              <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end max-w-[45%] pr-10">
                 {unit.author.forHire && (
                   <span
                     className="px-1.5 py-0.5 rounded-full font-mono text-[9px] uppercase tracking-wider whitespace-nowrap"
@@ -115,7 +154,6 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
                     for hire
                   </span>
                 )}
-                <LicensePill unit={unit} />
               </div>
             </header>
 
@@ -160,7 +198,7 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick }: Props) {
 
         {flipped && (
           <div className="absolute inset-0 flex flex-col bg-white">
-            <header className="flex items-center justify-between px-5 pt-16 pb-3 border-b border-black/8 shrink-0 pr-16">
+            <header className="flex items-center justify-between px-5 pt-14 pb-3 border-b border-black/8 shrink-0 pr-16">
               <div>
                 <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Manifest</div>
                 <h3 className="font-display text-base mt-0.5 truncate">{unit.title}</h3>
@@ -279,8 +317,8 @@ function AppIcon() {
   return (
     <span
       className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/80 border border-black/5 text-foreground shrink-0"
-      title="Встроенное приложение поста"
-      aria-label="app"
+      title="Бизнес-интерактив юнита · AI-сгенерированный функционал"
+      aria-label="бизнес-интерактив"
     >
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2">
         <rect x="1" y="1" width="3.5" height="3.5" rx="0.5" />

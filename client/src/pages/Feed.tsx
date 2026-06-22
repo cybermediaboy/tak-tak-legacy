@@ -20,6 +20,9 @@ export default function Feed() {
   const [spaceIdx, setSpaceIdx] = useState(0);
   const [unitIdx, setUnitIdx] = useState(0);
   const [drawer, setDrawer] = useState<null | { kind: 'respin' | 'give' | 'cherry'; unit: UnitManifest } | { kind: 'template'; spaceId: string } | { kind: 'user'; view: UserView }>(null);
+  // Fullscreen mode for unit card. Toggled by 2-finger pinch-out, double-tap header,
+  // pinch-in (or ESC) to exit. Hides TopBar + ActionRail + NavHints.
+  const [fullscreen, setFullscreen] = useState(false);
   const { toast } = useToast();
 
   const space = spaces[spaceIdx];
@@ -40,6 +43,8 @@ export default function Feed() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (drawer) return;
+      if (e.key === 'Escape' && fullscreen) { e.preventDefault(); setFullscreen(false); return; }
+      if (e.key === 'f' || e.key === 'F') { e.preventDefault(); setFullscreen(v => !v); return; }
       if (e.key === 'ArrowLeft')  { e.preventDefault(); moveSpace(-1); }
       if (e.key === 'ArrowRight') { e.preventDefault(); moveSpace(+1); }
       if (e.key === 'ArrowUp')    { e.preventDefault(); moveUnit(-1); }
@@ -49,7 +54,44 @@ export default function Feed() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [moveSpace, moveUnit, drawer]);
+  }, [moveSpace, moveUnit, drawer, fullscreen]);
+
+  // Pinch-to-zoom: 2-finger gesture toggles fullscreen.
+  // pinch-out (distance grows past 1.3×) → enter fullscreen.
+  // pinch-in (distance shrinks past 0.77×) → exit fullscreen.
+  // Double-tap on the unit header (not buttons) also toggles — wired via window CustomEvent.
+  useEffect(() => {
+    let initialDist = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialDist = Math.hypot(dx, dy);
+      }
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialDist > 0) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / initialDist;
+        if (ratio > 1.3 && !fullscreen) { setFullscreen(true); initialDist = 0; }
+        else if (ratio < 0.77 && fullscreen) { setFullscreen(false); initialDist = 0; }
+      }
+    };
+    const onTouchEnd = () => { initialDist = 0; };
+    const onToggleFs = () => setFullscreen(v => !v);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    window.addEventListener('touchend',   onTouchEnd,   { passive: true });
+    window.addEventListener('taktak:toggle-fullscreen', onToggleFs);
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove',  onTouchMove);
+      window.removeEventListener('touchend',   onTouchEnd);
+      window.removeEventListener('taktak:toggle-fullscreen', onToggleFs);
+    };
+  }, [fullscreen]);
 
   // Hyperlink graph navigation: jump to target unit across spaces.
   const handleLinkClick = useCallback((targetUnitId: string) => {
@@ -223,12 +265,24 @@ export default function Feed() {
       style={{ touchAction: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', overscrollBehavior: 'none' }}
       onWheel={onWheel}
     >
-      <TopBar
-        spaceIdx={spaceIdx}
-        setSpaceIdx={setSpaceIdx}
-        onOpenTemplate={() => setDrawer({ kind: 'template', spaceId: space.id })}
-        onOpenUser={() => setDrawer({ kind: 'user', view: 'menu' })}
-      />
+      {!fullscreen && (
+        <TopBar
+          spaceIdx={spaceIdx}
+          setSpaceIdx={setSpaceIdx}
+          onOpenUser={() => setDrawer({ kind: 'user', view: 'menu' })}
+        />
+      )}
+
+      {fullscreen && (
+        <button
+          onClick={() => setFullscreen(false)}
+          data-testid="fullscreen-exit"
+          className="fixed top-3 right-3 z-40 w-9 h-9 rounded-full bg-black/60 backdrop-blur text-white text-sm flex items-center justify-center hover:bg-black/80"
+          title="Выйти из полноэкранного режима (ESC или pinch-in)"
+        >
+          ✕
+        </button>
+      )}
 
       {/* Card fills the entire viewport. TopBar and BottomDock float over it as glass capsules. */}
       <div className="absolute inset-0 flex items-stretch justify-center">
@@ -241,16 +295,16 @@ export default function Feed() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
           >
-            {unit ? <UnitCard unit={unit} onAction={handleAction} onLinkClick={handleLinkClick} /> : <EmptySpace />}
+            {unit ? <UnitCard unit={unit} onAction={handleAction} onLinkClick={handleLinkClick} onOpenSpaceInfo={() => setDrawer({ kind: 'template', spaceId: space.id })} /> : <EmptySpace />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {unit && <ActionRail unit={unit} onAction={handleAction} />}
+      {unit && !fullscreen && <ActionRail unit={unit} onAction={handleAction} />}
 
-      <NavHints unitIdx={unitIdx} totalUnits={units.length} />
+      {!fullscreen && <NavHints unitIdx={unitIdx} totalUnits={units.length} />}
 
-      <BuildFab />
+      {!fullscreen && <BuildFab />}
 
       {/* Drawers */}
       {drawer?.kind === 'respin' && 'unit' in drawer && <RespinDrawer unit={drawer.unit} onClose={() => setDrawer(null)} />}
@@ -262,7 +316,7 @@ export default function Feed() {
   );
 }
 
-function TopBar({ spaceIdx, setSpaceIdx, onOpenTemplate, onOpenUser }: { spaceIdx: number; setSpaceIdx: (n: number) => void; onOpenTemplate: () => void; onOpenUser: () => void }) {
+function TopBar({ spaceIdx, setSpaceIdx, onOpenUser }: { spaceIdx: number; setSpaceIdx: (n: number) => void; onOpenUser: () => void }) {
   // Sticky-pinned spaces: For You + Local. Rest scrolls horizontally inside the strip.
   const stickyIds = ['s1', 's9'];
   const stickyEntries = stickyIds
@@ -297,14 +351,14 @@ function TopBar({ spaceIdx, setSpaceIdx, onOpenTemplate, onOpenUser }: { spaceId
 
   return (
     <div className="absolute top-0 inset-x-0 z-30 px-3 pt-3 pb-2 pointer-events-none" data-testid="top-bar">
-      {/* Row 1: user pill (left) + info button (right, opens template manifest) */}
-      <div className="flex items-center gap-2 pointer-events-auto mb-2">
+      {/* Single top row: user pill (left) + spaces strip (right), same height, same baseline. */}
+      <div className="flex items-stretch gap-2 pointer-events-auto min-w-0">
         <button
           onClick={onOpenUser}
           data-testid="top-user-pill"
           data-no-swipe
           title="Меню · Earnings · Профиль"
-          className="glass rounded-full pl-1 pr-2 py-1 flex items-center gap-1.5 hover:bg-white/90 transition-colors shrink-0"
+          className="glass rounded-full pl-1 pr-2 flex items-center gap-1.5 hover:bg-white/90 transition-colors shrink-0"
         >
           <span className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400/40 to-amber-400/40 border border-black/10 flex items-center justify-center text-sm leading-none">
             {currentUser.avatar}
@@ -312,22 +366,8 @@ function TopBar({ spaceIdx, setSpaceIdx, onOpenTemplate, onOpenUser }: { spaceId
           <span className="text-[10px] font-mono text-[#1A1A1A]">@{currentUser.handle.split('.')[0]}</span>
         </button>
 
-        <div className="flex-1" />
-
-        {/* Lightweight info button — opens template manifest for the active space. No name shown. */}
-        <button
-          onClick={onOpenTemplate}
-          data-testid="top-space-info"
-          data-no-swipe
-          title="О Space-шаблоне: engine, экономика, форки"
-          className="glass rounded-full w-8 h-8 flex items-center justify-center hover:bg-white/90 transition-colors shrink-0"
-        >
-          <span className="text-[#6B7785] text-base leading-none">ⓘ</span>
-        </button>
-      </div>
-
-      {/* Row 2: spaces strip — sticky [For You][Local] + scrollable rest */}
-      <div className="glass rounded-full p-1 flex items-stretch gap-1 pointer-events-auto min-w-0" data-testid="spaces-strip">
+        {/* Spaces strip — same row, same height as user pill. */}
+        <div className="glass rounded-full p-1 flex items-stretch gap-1 min-w-0 flex-1" data-testid="spaces-strip">
         {stickyEntries.map(({ s, idx }) => (
           <button
             key={s.id}
@@ -372,6 +412,7 @@ function TopBar({ spaceIdx, setSpaceIdx, onOpenTemplate, onOpenUser }: { spaceId
               <span>{s.name}</span>
             </button>
           ))}
+        </div>
         </div>
       </div>
     </div>

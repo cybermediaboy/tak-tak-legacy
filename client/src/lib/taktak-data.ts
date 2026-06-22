@@ -54,6 +54,9 @@ export interface UnitManifest {
     kind: LicenseKind;
     spinPrice?: number;       // USD, micro-payment for respin
     revenueShareBps?: number; // basis points (100 = 1%) sent back to original author chain
+    // Crawler / AI-training defence. Default for every unit is 'deny'.
+    // Authors can opt-in by switching to 'allow' or 'opt-in-only' (per-crawler allowlist).
+    aiTraining?: 'deny' | 'allow' | 'opt-in-only';
   };
   // Reputation signals
   stats: {
@@ -1060,3 +1063,114 @@ export const licenseLabel = (k: LicenseKind): string => ({
   patronage: 'Patronage',
   proprietary: 'Proprietary',
 }[k]);
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Brand strings — single source of truth for tagline/pitch/principles.
+// Used by MVP About view, landing tak-tak.net, PDF concept doc, social cards.
+// ──────────────────────────────────────────────────────────────────────────────
+
+// English tagline — locked verbatim by user 22 Jun 2026.
+export const TAGLINE_EN =
+  'Tak-Tak: a Web 4.0 social network of AI-generated mini-apps. ' +
+  'Swipe, spin, build, give, and control your earnings.';
+
+// Russian pitch — three differentiators vs TikTok, locked 22 Jun 2026.
+// Translated from user's Ukrainian original; Russian preferred as primary language.
+export const PITCH_RU = {
+  oneLiner:
+    'Tak-Tak — это как TikTok, только можно инвестировать друг в друга, ' +
+    'добавлять к контенту бизнес-интерактив за секунды и запрещать ' +
+    'Google и другим тренироваться на твоём контенте.',
+  differentiators: [
+    {
+      id: 'peer-investment',
+      icon: '♡',
+      title: 'Взаимные инвестиции',
+      body:
+        'Кнопка Give вместо лайка. Charity-ссылка без комиссии или ' +
+        'commission-ссылка с cookie-token attribution для рефералов. ' +
+        'Investment-спейс: эксперты публикуют тезисы, ты решаешь, кого поддержать.',
+    },
+    {
+      id: 'business-interactive',
+      icon: '⚡',
+      title: 'Бизнес-интерактив за секунды',
+      body:
+        '«Хочу такие кнопки или меню, как у этого магазина» — AI добавляет ' +
+        'к посту интерактивный и бизнес-функционал (заказ, бронь, голосование, ' +
+        'калькулятор, агент). Каждый юнит — это маленькое приложение с прозрачным манифестом.',
+    },
+    {
+      id: 'no-ai-training',
+      icon: '⊘',
+      title: 'Google не тренируется на тебе',
+      body:
+        'По умолчанию каждый юнит запрещает индексацию для AI-тренировок. ' +
+        'Хочешь — открываешь allowlist для конкретных краулеров. ' +
+        'Tak-Tak — антитеза «бесплатной фермы данных» для больших моделей.',
+    },
+  ],
+} as const;
+
+// Platform-level principles, surfaced in About view, landing, and PDF.
+export const PLATFORM_PRINCIPLES = [
+  {
+    id: 'no-centralized-ads',
+    icon: '⊘',
+    title: 'Нет централизованной рекламы',
+    body:
+      'Нет рекламной биржи, нет sponsored placements, нет «boost this post». ' +
+      'Видимость зарабатывается через cherries, respins и Give от сообщества.',
+  },
+  {
+    id: 'no-ai-training-default',
+    icon: '⊘',
+    title: 'AI-training: deny по умолчанию',
+    body:
+      'Лицензия каждого юнита несёт флаг aiTraining=deny. ' +
+      'Краулеры OpenAI, Google, Anthropic и других моделей не могут использовать ' +
+      'контент для обучения без явного opt-in от автора.',
+  },
+  {
+    id: 'two-link-referrals',
+    icon: '⇄',
+    title: 'Две ссылки рефералов',
+    body:
+      'Charity-ссылка (серая, без комиссии) и commission-ссылка (акцентная, ' +
+      'с token attribution через cookie). Автор сам выбирает, какая нужна.',
+  },
+  {
+    id: 'higher-tier-cards',
+    icon: '◆',
+    title: 'Higher-tier cards уникальны',
+    body:
+      'Карты верхних тиров Revenue Pass печатаются freelance-дизайнером ' +
+      'или владельцем бренда. Collectible + personalisation + marketing + thank-you layer.',
+  },
+] as const;
+
+// Cross-domain split — used in About view and landing.
+export const DOMAINS = {
+  mvp:   { url: 'https://tak-tak.ai',  label: 'tak-tak.ai',  role: 'MVP · живой клиент' },
+  docs:  { url: 'https://tak-tak.net', label: 'tak-tak.net', role: 'Концепт · документация' },
+} as const;
+
+// Referral link types — used by ActionRail "Share" / GiveDrawer.
+export type ReferralKind = 'charity' | 'commission';
+export interface ReferralLink {
+  kind: ReferralKind;
+  commissionBps?: number;       // basis points, only for 'commission'
+  cookieTokenTtlDays?: number;  // attribution window
+}
+export const REFERRAL_LABELS: Record<ReferralKind, { label: string; tone: string; note: string }> = {
+  charity: {
+    label: 'Charity-ссылка',
+    tone: 'text-[#6B7785]',     // gray
+    note: 'Без комиссии. Адресат получает 100%.',
+  },
+  commission: {
+    label: 'Commission-ссылка',
+    tone: 'text-[#F59E0B]',     // amber accent
+    note: 'С комиссией реферера · cookie-token attribution.',
+  },
+};
