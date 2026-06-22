@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UnitPayload } from './UnitPayload';
 import type { UnitManifest, SpaceTemplate, AuthorOverlay } from '@/lib/taktak-data';
-import { formatNum, licenseLabel, templatesById, spaces } from '@/lib/taktak-data';
+import { formatNum, licenseLabel, templatesById, spaces, REFERRAL_LABELS } from '@/lib/taktak-data';
 
 function sanitizeOverlayVars(overlay: AuthorOverlay | undefined, whitelist: string[]): Record<string, string> {
   if (!overlay?.cssVars) return {};
@@ -185,14 +185,18 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceIn
               <UnitLinks links={unit.links} unitId={unit.id} onLinkClick={onLinkClick} />
             )}
 
+            {/* Two-link referrals — charity (gray, commissionless) vs commission (amber, attribution) */}
+            <ReferralLinks unit={unit} />
+
             {/* Stats footer — pb-24 keeps the row above the floating BottomDock. */}
-            <footer className="px-5 pt-3 pb-24 border-t border-black/5 bg-white/40 flex items-center justify-between text-xs text-muted-foreground shrink-0">
+            <footer className="px-5 pt-3 pb-24 border-t border-black/5 bg-white/40 flex items-center justify-between gap-2 text-xs text-muted-foreground shrink-0">
               <div className="flex items-center gap-4 font-mono">
                 <span title="просмотры">👁 {formatNum(unit.stats.views)}</span>
                 <span title="respins (форки)">↻ {formatNum(unit.stats.spins)}</span>
                 <span title="cherries (заимствования)">🍒 {formatNum(unit.stats.cherries)}</span>
                 <span title="patronage backers">♡ {formatNum(unit.stats.givers)}</span>
               </div>
+              <AiTrainingBadge unit={unit} />
             </footer>
           </div>
         )}
@@ -352,6 +356,62 @@ function AuthorAvatar({ unit }: { unit: UnitManifest }) {
           ⚑
         </span>
       )}
+    </div>
+  );
+}
+
+// AI-training crawler badge — reflects per-unit aiTraining flag.
+// Deny (default): gray-on-gray, padlock. Allow: amber. Opt-in: blue.
+function AiTrainingBadge({ unit }: { unit: UnitManifest }) {
+  const mode = unit.license.aiTraining ?? 'deny';
+  const map = {
+    'deny':         { icon: '⊛', label: 'no-AI-train', cls: 'text-[#6B7785] bg-black/5 border-black/10' },
+    'opt-in-only':  { icon: '⛬', label: 'AI opt-in',   cls: 'text-[#1E88E5] bg-[#1E88E5]/10 border-[#1E88E5]/30' },
+    'allow':        { icon: '☸',  label: 'AI allowed',  cls: 'text-[#9C6A0E] bg-amber-100 border-amber-300' },
+  } as const;
+  const m = map[mode];
+  return (
+    <span
+      data-testid={`ai-training-${unit.id}`}
+      className={`shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider whitespace-nowrap ${m.cls}`}
+      title={`AI-training: ${mode} · пер-unit лицензия`}
+    >
+      <span className="text-[10px]">{m.icon}</span>{m.label}
+    </span>
+  );
+}
+
+// Two-link referrals — every author can share a unit with one of two links:
+//  • charity — gray, no commission, 100% to recipient.
+//  • commission — amber, with cookie-token attribution to the sharer.
+// UI surfaces both as small chips next to each other; tone communicates intent.
+function ReferralLinks({ unit }: { unit: UnitManifest }) {
+  const charity = REFERRAL_LABELS.charity;
+  const commission = REFERRAL_LABELS.commission;
+  const baseUrl = `https://tak-tak.ai/u/${unit.id}`;
+  return (
+    <div
+      className="px-5 pb-2 pt-2 flex items-center gap-2 border-t border-black/5 shrink-0"
+      data-testid={`referrals-${unit.id}`}
+      title="Две ссылки рефералов: charity (без комиссии) и commission (с attribution)"
+    >
+      <button
+        onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(`${baseUrl}?ref=charity`); }}
+        className={`shrink-0 inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/5 px-2 py-0.5 text-[10px] font-mono ${charity.tone} hover:bg-black/10 transition-colors`}
+        data-testid={`referral-charity-${unit.id}`}
+        title={charity.note}
+      >
+        ○ {charity.label}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(`${baseUrl}?ref=commission`); }}
+        className={`shrink-0 inline-flex items-center gap-1 rounded-full border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-2 py-0.5 text-[10px] font-mono ${commission.tone} hover:bg-[#F59E0B]/20 transition-colors`}
+        data-testid={`referral-commission-${unit.id}`}
+        title={commission.note}
+      >
+        ◆ {commission.label}
+      </button>
+      <span className="text-[9px] text-muted-foreground font-mono ml-1 truncate">/u/{unit.id}</span>
     </div>
   );
 }

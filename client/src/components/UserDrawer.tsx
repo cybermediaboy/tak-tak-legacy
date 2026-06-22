@@ -4,9 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { units as allUnits, spaces, formatNum, PITCH_RU, PLATFORM_PRINCIPLES, DOMAINS, type UnitManifest } from '@/lib/taktak-data';
+import { units as allUnits, spaces, formatNum, PITCH_RU, PLATFORM_PRINCIPLES, DOMAINS, REVENUE_PASS_TIERS, type UnitManifest } from '@/lib/taktak-data';
 
-export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings' | 'about';
+export type UserView = 'menu' | 'earnings' | 'profile' | 'posts' | 'subs' | 'settings' | 'about' | 'pass';
 
 interface CurrentUser {
   id: string;
@@ -90,6 +90,7 @@ export function UserDrawer({ onClose, initialView = 'menu' }: { onClose: () => v
             {view === 'menu' && <UserMenu onPick={setView} />}
             {view === 'earnings' && <EarningsView />}
             {view === 'about' && <AboutView />}
+            {view === 'pass' && <PassView />}
             {view === 'profile' && <PlaceholderView title="Профиль" body="Здесь будет публичный профиль, гильдия, репутация, верификации." />}
             {view === 'posts' && <PlaceholderView title="Мои посты" body="Список ваших юнитов, статистика просмотров, версий, форков." />}
             {view === 'subs' && <PlaceholderView title="Подписки" body="Спейсы, на которые вы подписаны. Управление лентой For You." />}
@@ -109,6 +110,7 @@ function UserMenu({ onPick }: { onPick: (v: UserView) => void }) {
 
   const items: { id: UserView; icon: string; label: string; meta?: string; accent?: boolean }[] = [
     { id: 'earnings', icon: '◉', label: 'Earnings', meta: `$${totals.todayUsd.toFixed(2)} сегодня · $${totals.totalUsd.toFixed(2)} всего`, accent: true },
+    { id: 'pass',     icon: '◆', label: 'Revenue Pass', meta: '4 тира · от бесплатного до collectible' },
     { id: 'posts',    icon: '⊞', label: 'Мои посты', meta: `${totals.myPosts} юнитов · ${formatNum(totals.totalViews)} просмотров` },
     { id: 'subs',     icon: '✦', label: 'Подписки', meta: `${spaces.length - 1} каналов` },
     { id: 'profile',  icon: '◯', label: 'Профиль', meta: `@${currentUser.handle}` },
@@ -436,6 +438,54 @@ function CardRow({ c }: { c: PerCardEarning }) {
 // About view — canonical pitch + 3 differentiators + platform principles + cross-domain.
 // Single source of truth — strings live in @/lib/taktak-data.
 // ──────────────────────────────────────────────────────────────────────────────
+
+function PassView() {
+  return (
+    <div className="space-y-4" data-testid="view-pass">
+      <div>
+        <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono mb-2">Revenue Pass</div>
+        <p className="text-[13px] leading-relaxed text-[#1A1A1A]">
+          Четыре тира · от бесплатного digital до физического collectible с NFC.
+          Карты верхних тиров рисуют freelance-дизайнеры или владельцы бренда —
+          это серийный предмет с marketing- и thank-you-слоями.
+        </p>
+      </div>
+      {REVENUE_PASS_TIERS.map(t => (
+        <div
+          key={t.id}
+          data-testid={`pass-tier-${t.id}`}
+          className="rounded-2xl border bg-white/70 px-4 py-4 shadow-sm"
+          style={{ borderColor: `${t.accent}55` }}
+        >
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: t.accent }}>tier {t.level}</span>
+              <span className="font-display text-[15px] truncate text-[#1A1A1A]">{t.name}</span>
+            </div>
+            <div className="text-[12px] font-mono shrink-0" style={{ color: t.accent }}>
+              {t.priceUsd === 0 ? 'free' : `$${t.priceUsd.toFixed(t.priceUsd < 10 ? 2 : 0)}`}
+            </div>
+          </div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7785] mb-1.5">
+            {t.designer === 'system' ? 'system' : t.designer === 'freelancer' ? 'freelance-дизайн · collectible' : 'brand-owner print · NFC'}
+            {t.physical ? ` · ${t.physical.material} · /${t.physical.runSize}` : ''}
+          </div>
+          <ul className="space-y-1">
+            {t.perks.map((p, i) => (
+              <li key={i} className="text-[12px] leading-relaxed text-[#3a4148] flex gap-2">
+                <span className="text-[10px] mt-1" style={{ color: t.accent }}>▪</span>
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <div className="text-[10px] font-mono text-[#6B7785] uppercase tracking-wider pt-1">
+        Карты · без подписки · владелец = владелец
+      </div>
+    </div>
+  );
+}
 
 function AboutView() {
   return (

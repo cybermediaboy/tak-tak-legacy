@@ -772,7 +772,7 @@ export const units: UnitManifest[] = [
         { id: 'shipping',labelOverride: 'Маршрут' },
       ],
     },
-    license: { kind: 'proprietary', revenueShareBps: 0 },
+    license: { kind: 'proprietary', revenueShareBps: 0, aiTraining: 'allow' },
     stats: { views: 14_200, spins: 4, cherries: 312, givers: 38 },
     generation: 0, branch: 'main', commitHash: nextCommit(), forks: 4, openPRs: 0, registryHash: nextHash(),
     createdAt: '2026-06-21T08:00:00Z',
@@ -833,7 +833,7 @@ export const units: UnitManifest[] = [
       readingMinutes: 2,
     },
     links: [{ targetUnitId: 'u20', label: '→ Starter pack: KAMA в наборе', kind: 'dependency' }],
-    license: { kind: 'free', revenueShareBps: 100 },
+    license: { kind: 'free', revenueShareBps: 100, aiTraining: 'opt-in-only' },
     stats: { views: 4_900, spins: 73, cherries: 412, givers: 8 },
     generation: 0, branch: 'main', commitHash: nextCommit(), forks: 73, openPRs: 1, registryHash: nextHash(),
     createdAt: '2026-06-20T15:00:00Z',
@@ -897,7 +897,7 @@ export const units: UnitManifest[] = [
     links: [
       { targetUnitId: 'u3', label: 'Голосование: цвет протокола', kind: 'reference' },
     ],
-    license: { kind: 'free' },
+    license: { kind: 'free', aiTraining: 'opt-in-only' },
     stats: { views: 12_400, spins: 318, cherries: 1_201, givers: 14 },
     generation: 0, branch: 'main', commitHash: nextCommit(), forks: 318, openPRs: 2, registryHash: nextHash(),
     createdAt: '2026-06-18T09:00:00Z',
@@ -1174,3 +1174,71 @@ export const REFERRAL_LABELS: Record<ReferralKind, { label: string; tone: string
     note: 'С комиссией реферера · cookie-token attribution.',
   },
 };
+
+// Revenue Pass tiers — higher tiers are physical collectibles printed by
+// freelance designers / brand owners. Tier 0 is digital-only (default).
+export interface PassTier {
+  id: string;
+  level: number;
+  name: string;
+  priceUsd: number;
+  perks: string[];
+  // collectible aspect: who designs the card itself.
+  designer: 'system' | 'freelancer' | 'brand-owner';
+  // physical print spec hint.
+  physical?: { material: string; runSize: number };
+  accent: string;
+  iconStyle?: string; // single-line stylised brand chip
+}
+
+export const REVENUE_PASS_TIERS: PassTier[] = [
+  {
+    id: 't0',
+    level: 0,
+    name: 'Open Pass',
+    priceUsd: 0,
+    designer: 'system',
+    accent: '#6B7785',
+    perks: ['Give / Cherry / Respin', 'Charity-ссылки', 'Earnings dashboard'],
+  },
+  {
+    id: 't1',
+    level: 1,
+    name: 'Author Pass',
+    priceUsd: 4.99,
+    designer: 'system',
+    accent: '#2E7D32',
+    perks: ['Commission-ссылки', 'Custom unit overlay', 'Priority Respin queue'],
+  },
+  {
+    id: 't2',
+    level: 2,
+    name: 'Designer Card',
+    priceUsd: 29,
+    designer: 'freelancer',
+    physical: { material: 'PVC с hot-stamp foil', runSize: 500 },
+    accent: '#F59E0B',
+    perks: [
+      'Freelance-дизайнер рисует карту',
+      'Collectible · numbered run /500',
+      'Personal thank-you layer (авторский ASCII/handwriting)',
+      'On-card marketing slot — вы выбираете что печатать',
+    ],
+  },
+  {
+    id: 't3',
+    level: 3,
+    name: 'Brand Card',
+    priceUsd: 199,
+    designer: 'brand-owner',
+    physical: { material: 'Металлический ламинат · NFC chip', runSize: 100 },
+    accent: '#1E88E5',
+    perks: [
+      'Карту печатает владелец бренда',
+      'NFC · tap-to-spin-unit',
+      'Numbered /100 · серийный collectible',
+      'Бренд-layer на юнитах прямо в ribbon (corner watermark)',
+      'Direct line к brand-owner в Brick & Mortar',
+    ],
+  },
+];
