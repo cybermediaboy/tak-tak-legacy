@@ -439,9 +439,133 @@ function CardRow({ c }: { c: PerCardEarning }) {
 // Single source of truth — strings live in @/lib/taktak-data.
 // ──────────────────────────────────────────────────────────────────────────────
 
-function PassView() {
+// Visual card mock — ISO/IEC 7810 ID-1 ratio (85.6 × 53.98 mm → ~1.586:1).
+// Surface, foil treatment and chip cluster differ by `designer`.
+function PassCardMock({ tier, serial }: { tier: typeof REVENUE_PASS_TIERS[number]; serial: string }) {
+  const isSystem = tier.designer === 'system';
+  const isFreelancer = tier.designer === 'freelancer';
+  const isBrand = tier.designer === 'brand-owner';
+
+  // Surface — system: matte off-white with thin accent; freelancer: foil-gradient on PVC;
+  // brand-owner: brushed-metal laminate.
+  const surface = isSystem
+    ? { background: `linear-gradient(135deg, #F4F2EC 0%, #ECE9E1 100%)` }
+    : isFreelancer
+    ? {
+        background: `linear-gradient(135deg, ${tier.accent} 0%, ${tier.accent}CC 38%, #2A1F12 100%)`,
+      }
+    : {
+        background: `linear-gradient(135deg, #1A2330 0%, #243042 45%, ${tier.accent} 100%)`,
+      };
+
+  // Text + chip contrast — light on dark surfaces, dark on light.
+  const onDark = !isSystem;
+  const ink = onDark ? '#F6F4EE' : '#1A1A1A';
+  const inkSoft = onDark ? '#F6F4EEAA' : '#1A1A1A88';
+
   return (
-    <div className="space-y-4" data-testid="view-pass">
+    <div
+      data-testid={`pass-card-mock-${tier.id}`}
+      className="relative w-full overflow-hidden rounded-2xl shadow-lg"
+      style={{
+        aspectRatio: '1.586 / 1',
+        ...surface,
+        boxShadow: onDark
+          ? `0 10px 24px -12px ${tier.accent}55, 0 2px 6px rgba(0,0,0,0.18)`
+          : `0 8px 20px -14px rgba(0,0,0,0.45)`,
+      }}
+    >
+      {/* Hot-stamp foil sweep for freelancer / brushed sheen for brand */}
+      {isFreelancer && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%)',
+            mixBlendMode: 'overlay',
+          }}
+        />
+      )}
+      {isBrand && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-40"
+          style={{
+            background:
+              'repeating-linear-gradient(115deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 3px)',
+          }}
+        />
+      )}
+
+      {/* Top row — issuer + tier number */}
+      <div className="absolute top-3 left-4 right-4 flex items-start justify-between">
+        <div className="font-mono text-[9px] uppercase tracking-[0.18em]" style={{ color: inkSoft }}>
+          tak-tak · revenue pass
+        </div>
+        <div className="font-mono text-[9px] tracking-[0.12em]" style={{ color: inkSoft }}>
+          tier {String(tier.level).padStart(2, '0')}
+        </div>
+      </div>
+
+      {/* EMV chip + NFC wave cluster (skip on free t0) */}
+      {tier.priceUsd > 0 && (
+        <div className="absolute left-4 top-[38%] flex items-center gap-2">
+          {/* chip */}
+          <div
+            className="w-7 h-5 rounded-[3px] relative overflow-hidden"
+            style={{
+              background:
+                'linear-gradient(135deg, #D9C173 0%, #B79A4A 45%, #8E7430 100%)',
+              boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.4)',
+            }}
+          >
+            <div
+              className="absolute inset-[15%]"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent 24%, rgba(0,0,0,0.35) 24%, rgba(0,0,0,0.35) 26%, transparent 26%, transparent 48%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0.35) 50%, transparent 50%, transparent 72%, rgba(0,0,0,0.35) 72%, rgba(0,0,0,0.35) 74%, transparent 74%), linear-gradient(0deg, transparent 38%, rgba(0,0,0,0.35) 38%, rgba(0,0,0,0.35) 40%, transparent 40%, transparent 60%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.35) 62%, transparent 62%)',
+              }}
+            />
+          </div>
+          {/* NFC arcs — only on physical tiers */}
+          {tier.physical && (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M3 11 C 5 9, 5 5, 3 3" stroke={ink} strokeOpacity="0.65" strokeWidth="1" strokeLinecap="round" />
+              <path d="M6 12 C 9 9, 9 5, 6 2" stroke={ink} strokeOpacity="0.5" strokeWidth="1" strokeLinecap="round" />
+              <path d="M9 13 C 13 9, 13 5, 9 1" stroke={ink} strokeOpacity="0.35" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+          )}
+        </div>
+      )}
+
+      {/* Card name + designer line */}
+      <div className="absolute left-4 right-4 bottom-9">
+        <div className="font-display text-[18px] leading-tight" style={{ color: ink, letterSpacing: '-0.01em' }}>
+          {tier.name}
+        </div>
+        <div className="font-mono text-[9px] uppercase tracking-[0.14em] mt-0.5" style={{ color: inkSoft }}>
+          {isSystem ? 'system issue' : isFreelancer ? 'freelance design · collectible' : 'brand-owner print · nfc'}
+        </div>
+      </div>
+
+      {/* Bottom row — serial + run + price */}
+      <div className="absolute left-4 right-4 bottom-3 flex items-end justify-between">
+        <div className="font-mono text-[9px] tracking-[0.12em]" style={{ color: inkSoft }}>
+          {serial}
+          {tier.physical ? `  ·  /${tier.physical.runSize}` : ''}
+        </div>
+        <div className="font-mono text-[10px]" style={{ color: ink }}>
+          {tier.priceUsd === 0 ? 'free' : `$${tier.priceUsd.toFixed(tier.priceUsd < 10 ? 2 : 0)}`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PassView() {
+  // Stable demo serial per tier (would be issued on purchase in production).
+  const serialFor = (level: number) => `№ 0000-${String(level).padStart(2, '0')}42`;
+  return (
+    <div className="space-y-5" data-testid="view-pass">
       <div>
         <div className="text-[10px] uppercase tracking-wider text-[#6B7785] font-mono mb-2">Revenue Pass</div>
         <p className="text-[13px] leading-relaxed text-[#1A1A1A]">
@@ -451,33 +575,24 @@ function PassView() {
         </p>
       </div>
       {REVENUE_PASS_TIERS.map(t => (
-        <div
-          key={t.id}
-          data-testid={`pass-tier-${t.id}`}
-          className="rounded-2xl border bg-white/70 px-4 py-4 shadow-sm"
-          style={{ borderColor: `${t.accent}55` }}
-        >
-          <div className="flex items-baseline justify-between gap-3 mb-2">
-            <div className="flex items-baseline gap-2 min-w-0">
-              <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: t.accent }}>tier {t.level}</span>
-              <span className="font-display text-[15px] truncate text-[#1A1A1A]">{t.name}</span>
+        <div key={t.id} data-testid={`pass-tier-${t.id}`} className="space-y-2">
+          <PassCardMock tier={t} serial={serialFor(t.level)} />
+          <div
+            className="rounded-xl border bg-white/70 px-3.5 py-3"
+            style={{ borderColor: `${t.accent}33` }}
+          >
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7785] mb-1.5">
+              {t.physical ? `${t.physical.material} · run /${t.physical.runSize}` : 'digital · no print'}
             </div>
-            <div className="text-[12px] font-mono shrink-0" style={{ color: t.accent }}>
-              {t.priceUsd === 0 ? 'free' : `$${t.priceUsd.toFixed(t.priceUsd < 10 ? 2 : 0)}`}
-            </div>
+            <ul className="space-y-1">
+              {t.perks.map((p, i) => (
+                <li key={i} className="text-[12px] leading-relaxed text-[#3a4148] flex gap-2">
+                  <span className="text-[10px] mt-1" style={{ color: t.accent }}>▪</span>
+                  <span>{p}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-[#6B7785] mb-1.5">
-            {t.designer === 'system' ? 'system' : t.designer === 'freelancer' ? 'freelance-дизайн · collectible' : 'brand-owner print · NFC'}
-            {t.physical ? ` · ${t.physical.material} · /${t.physical.runSize}` : ''}
-          </div>
-          <ul className="space-y-1">
-            {t.perks.map((p, i) => (
-              <li key={i} className="text-[12px] leading-relaxed text-[#3a4148] flex gap-2">
-                <span className="text-[10px] mt-1" style={{ color: t.accent }}>▪</span>
-                <span>{p}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       ))}
       <div className="text-[10px] font-mono text-[#6B7785] uppercase tracking-wider pt-1">
