@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UnitPayload } from './UnitPayload';
 import type { UnitManifest, SpaceTemplate, AuthorOverlay } from '@/lib/taktak-data';
-import { formatNum, licenseLabel, templatesById, spaces, REFERRAL_LABELS } from '@/lib/taktak-data';
+import { formatNum, licenseLabel, templatesById, spaces } from '@/lib/taktak-data';
 
 function sanitizeOverlayVars(overlay: AuthorOverlay | undefined, whitelist: string[]): Record<string, string> {
   if (!overlay?.cssVars) return {};
@@ -184,9 +184,6 @@ export function UnitCard({ unit, onAction: _onAction, onLinkClick, onOpenSpaceIn
             {unit.links && unit.links.length > 0 && (
               <UnitLinks links={unit.links} unitId={unit.id} onLinkClick={onLinkClick} />
             )}
-
-            {/* Two-link referrals — charity (gray, commissionless) vs commission (amber, attribution) */}
-            <ReferralLinks unit={unit} />
 
             {/* Stats footer — pb-24 keeps the row above the floating BottomDock. */}
             <footer className="px-5 pt-3 pb-24 border-t border-black/5 bg-white/40 flex items-center justify-between gap-2 text-xs text-muted-foreground shrink-0">
@@ -381,41 +378,6 @@ function AiTrainingBadge({ unit }: { unit: UnitManifest }) {
   );
 }
 
-// Two-link referrals — every author can share a unit with one of two links:
-//  • charity — gray, no commission, 100% to recipient.
-//  • commission — amber, with cookie-token attribution to the sharer.
-// UI surfaces both as small chips next to each other; tone communicates intent.
-function ReferralLinks({ unit }: { unit: UnitManifest }) {
-  const charity = REFERRAL_LABELS.charity;
-  const commission = REFERRAL_LABELS.commission;
-  const baseUrl = `https://tak-tak.ai/u/${unit.id}`;
-  return (
-    <div
-      className="px-5 pb-2 pt-2 flex items-center gap-2 border-t border-black/5 shrink-0"
-      data-testid={`referrals-${unit.id}`}
-      title="Две ссылки рефералов: charity (без комиссии) и commission (с attribution)"
-    >
-      <button
-        onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(`${baseUrl}?ref=charity`); }}
-        className={`shrink-0 inline-flex items-center gap-1 rounded-full border border-black/10 bg-black/5 px-2 py-0.5 text-[10px] font-mono ${charity.tone} hover:bg-black/10 transition-colors`}
-        data-testid={`referral-charity-${unit.id}`}
-        title={charity.note}
-      >
-        ○ {charity.label}
-      </button>
-      <button
-        onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(`${baseUrl}?ref=commission`); }}
-        className={`shrink-0 inline-flex items-center gap-1 rounded-full border border-[#F59E0B]/40 bg-[#F59E0B]/10 px-2 py-0.5 text-[10px] font-mono ${commission.tone} hover:bg-[#F59E0B]/20 transition-colors`}
-        data-testid={`referral-commission-${unit.id}`}
-        title={commission.note}
-      >
-        ◆ {commission.label}
-      </button>
-      <span className="text-[9px] text-muted-foreground font-mono ml-1 truncate">/u/{unit.id}</span>
-    </div>
-  );
-}
-
 function LicensePill({ unit }: { unit: UnitManifest }) {
   const colors: Record<string, string> = {
     free:          'bg-emerald-50 text-emerald-800 border-emerald-200',
@@ -492,6 +454,11 @@ function FnRail({
   );
 }
 
+// Inline hyperlinks in unit body. Two tones:
+//  • charity (gray)     — бескорыстная рекомендация
+//  • commission (amber) — реферер получает долю от Give/покупки в цели
+// Остальные (reference / parent / remix-of / dependency) — структурные связи графа юнитов
+// (sky-blue), сохранёны для remix lineage.
 function UnitLinks({
   links,
   unitId,
@@ -506,6 +473,26 @@ function UnitLinks({
     parent: '↰',
     'remix-of': '↻',
     dependency: '⇢',
+    charity: '○',
+    commission: '◆',
+  };
+  const toneFor = (kind: string) => {
+    if (kind === 'charity') {
+      return 'bg-[#6B7785]/8 text-[#4B5560] border-[#6B7785]/25 hover:bg-[#6B7785]/16';
+    }
+    if (kind === 'commission') {
+      return 'bg-[#F59E0B]/8 text-[#B45309] border-[#F59E0B]/35 hover:bg-[#F59E0B]/18';
+    }
+    return 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100';
+  };
+  const tooltipFor = (kind: string, targetId: string) => {
+    if (kind === 'charity') {
+      return `charity-ссылка · бескорыстный переход, автор не получает долю · → ${targetId}`;
+    }
+    if (kind === 'commission') {
+      return `commission-ссылка · автор получает долю при Give/покупке в цели · → ${targetId}`;
+    }
+    return `Ссылка · тип: ${kind} · цель: ${targetId}`;
   };
   return (
     <div className="px-5 pb-3 flex flex-wrap gap-1.5 shrink-0" data-testid={`links-${unitId}`}>
@@ -513,9 +500,9 @@ function UnitLinks({
         <button
           key={i}
           onClick={() => onLinkClick?.(l.targetUnitId)}
-          className="text-[10px] font-mono rounded-full px-2 py-0.5 bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors"
-          title={`Ссылка · тип: ${l.kind} · цель: ${l.targetUnitId}`}
-          data-testid={`link-${unitId}-${l.targetUnitId}`}
+          className={`text-[10px] font-mono rounded-full px-2 py-0.5 border transition-colors ${toneFor(l.kind)}`}
+          title={tooltipFor(l.kind, l.targetUnitId)}
+          data-testid={`link-${unitId}-${l.kind}-${l.targetUnitId}`}
         >
           <span className="opacity-60">{kindIcon[l.kind]}</span> {l.label}
         </button>

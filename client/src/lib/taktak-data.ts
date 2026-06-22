@@ -48,7 +48,12 @@ export interface UnitManifest {
   // Author-level customisation (within template's whitelist)
   overlay?: AuthorOverlay;
   // Hyperlinks to other units — unit-graph navigation
-  links?: Array<{ targetUnitId: string; label: string; kind: 'reference' | 'parent' | 'remix-of' | 'dependency' }>;
+  // Hyperlinks inside a unit's body to other units.
+  // kinds:
+  //  - reference / parent / remix-of / dependency: structural (lineage / DAG graph)
+  //  - charity:    commissionless link; 100% to destination, no attribution token
+  //  - commission: amber link; carries cookie-token attribution to the author who placed it
+  links?: Array<{ targetUnitId: string; label: string; kind: 'reference' | 'parent' | 'remix-of' | 'dependency' | 'charity' | 'commission' }>;
   // Commerce / licensing
   license: {
     kind: LicenseKind;
@@ -555,7 +560,11 @@ export const units: UnitManifest[] = [
         { id: 'export' },
       ],
     },
-    links: [{ targetUnitId: 'u4', label: 'Сопоставить с heatmap', kind: 'reference' }],
+    links: [
+      { targetUnitId: 'u4', label: 'Сопоставить с heatmap', kind: 'reference' },
+      { targetUnitId: 'u14', label: 'on-chain screener автора', kind: 'commission' },
+      { targetUnitId: 'u8', label: 'glossary: netflow / spread', kind: 'charity' },
+    ],
     license: { kind: 'micro-paid', spinPrice: 0.30, revenueShareBps: 800 },
     stats: { views: 5_120, spins: 187, cherries: 290, givers: 9 },
     generation: 0, branch: 'main', commitHash: nextCommit(), forks: 187, openPRs: 2, registryHash: nextHash(),
@@ -896,6 +905,8 @@ export const units: UnitManifest[] = [
     payload: { body: `When a feed scrolls only one way, it becomes a river. When it scrolls in two, it becomes a field — and a field can be sown.\n\nTak-Tak is not a feed. It is a coordinate plane: vertical for depth inside a topic, horizontal for jumping between topics. The unit you are reading is the smallest possible space — one author, one license, one payload.`, readingMinutes: 1 },
     links: [
       { targetUnitId: 'u3', label: 'Голосование: цвет протокола', kind: 'reference' },
+      { targetUnitId: 'u12', label: 'Прочитать вторую часть эссе', kind: 'charity' },
+      { targetUnitId: 'u20', label: 'starter pack «формы внимания»', kind: 'commission' },
     ],
     license: { kind: 'free', aiTraining: 'opt-in-only' },
     stats: { views: 12_400, spins: 318, cherries: 1_201, givers: 14 },
@@ -1087,8 +1098,8 @@ export const PITCH_RU = {
       icon: '♡',
       title: 'Взаимные инвестиции',
       body:
-        'Кнопка Give вместо лайка. Charity-ссылка без комиссии или ' +
-        'commission-ссылка с cookie-token attribution для рефералов. ' +
+        'Кнопка Give вместо лайка. Ссылки в тексте бывают двух цветов: ' +
+        'серая charity — бескорыстная, амбер commission — с долей автору-рефереру. ' +
         'Investment-спейс: эксперты публикуют тезисы, ты решаешь, кого поддержать.',
     },
     {
@@ -1134,10 +1145,11 @@ export const PLATFORM_PRINCIPLES = [
   {
     id: 'two-link-referrals',
     icon: '⇄',
-    title: 'Две ссылки рефералов',
+    title: 'Два цвета инлайн-ссылок',
     body:
-      'Charity-ссылка (серая, без комиссии) и commission-ссылка (акцентная, ' +
-      'с token attribution через cookie). Автор сам выбирает, какая нужна.',
+      'Обычные гиперссылки в тексте юнита. Серый цвет (charity) — бескорыстный ' +
+      'переход. Амбер (commission) — автор получит долю, если читатель совершит в цели ' +
+      'Give или покупку (cookie-token attribution). Tooltip объясняет разницу.',
   },
   {
     id: 'higher-tier-cards',
@@ -1162,16 +1174,22 @@ export interface ReferralLink {
   commissionBps?: number;       // basis points, only for 'commission'
   cookieTokenTtlDays?: number;  // attribution window
 }
+// Inline-link tone: applied to hyperlinks inside a unit's body.
+//  charity — бескорыстная ссылка. Автор просто рекомендует и ничего за это не получает.
+//  commission — ссылка-рекомендация. Если читатель перейдёт и совершит Give или покупку в целевом
+//               юните, автор-реферер получает долю (cookie-token attribution).
+// Читатель видит разницу по цвету; tooltip объясняет. Никаких отдельных UI-кнопок в карточке нет
+// — для копии/распространения самого юнита используются Cherry и Share.
 export const REFERRAL_LABELS: Record<ReferralKind, { label: string; tone: string; note: string }> = {
   charity: {
-    label: 'Charity-ссылка',
-    tone: 'text-[#6B7785]',     // gray
-    note: 'Без комиссии. Адресат получает 100%.',
+    label: 'charity',
+    tone: 'text-[#6B7785]',
+    note: 'Бескорыстная ссылка · автор не получает ничего за переход.',
   },
   commission: {
-    label: 'Commission-ссылка',
-    tone: 'text-[#F59E0B]',     // amber accent
-    note: 'С комиссией реферера · cookie-token attribution.',
+    label: 'commission',
+    tone: 'text-[#F59E0B]',
+    note: 'Ссылка-рекомендация · автор получает долю, если читатель совершит Give/покупку.',
   },
 };
 
