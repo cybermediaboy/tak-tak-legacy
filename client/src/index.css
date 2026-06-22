@@ -1,0 +1,346 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Tak-Tak MVP · Hintology aesthetic
+   Nature-photo background · frosted-glass panels · Inter · pill buttons
+   ==========================================================================
+   Colour philosophy:
+   - Surfaces are translucent glass (white-on-photo)
+   - Drawers and dialogs are opaque white panels
+   - Text is dark slate on glass, near-black on opaque
+   - One accent: living green for active state / CTA
+   - Origin / event chips keep their own coded hues
+   ========================================================================== */
+
+:root {
+  /* HSL design tokens — H S% L% without hsl() wrapper (Tailwind config wraps it) */
+
+  /* Ambient overlay tint — soft slate over nature photo */
+  --background: 210 20% 96%;
+  --foreground: 220 18% 12%;
+
+  /* Glass surfaces — transparent. The body photo shows through. */
+  --card: 0 0% 100%;
+  --card-foreground: 220 18% 12%;
+  --card-border: 220 12% 88%;
+
+  /* Borders for opaque panels */
+  --border: 220 12% 88%;
+  --input: 220 12% 84%;
+
+  /* Living green accent — Hintology signature */
+  --primary: 122 39% 49%;            /* #4CAF50 */
+  --primary-foreground: 0 0% 100%;
+  --primary-border: hsl(122 39% 42%);
+
+  /* Soft secondary */
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 18% 12%;
+  --secondary-border: hsl(220 12% 86%);
+
+  /* Muted greys */
+  --muted: 220 14% 94%;
+  --muted-foreground: 215 12% 42%;
+  --muted-border: hsl(220 12% 86%);
+
+  /* Warm accent — amber for "freelance" / paid markers */
+  --accent: 42 96% 56%;              /* #F9A825 amber */
+  --accent-foreground: 220 18% 12%;
+  --accent-border: hsl(42 96% 48%);
+
+  /* Destructive — refined red */
+  --destructive: 0 65% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-border: hsl(0 65% 45%);
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 18% 12%;
+  --popover-border: hsl(220 12% 86%);
+
+  /* Sidebar (unused — kept for shadcn) */
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 220 18% 12%;
+  --sidebar-border: hsl(220 12% 86%);
+  --sidebar-primary: 122 39% 49%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-primary-border: hsl(122 39% 42%);
+  --sidebar-accent: 220 14% 94%;
+  --sidebar-accent-foreground: 220 18% 12%;
+  --sidebar-accent-border: hsl(220 12% 84%);
+  --sidebar-ring: 122 39% 49%;
+
+  --ring: 122 39% 49%;
+
+  /* Chart colours — calm */
+  --chart-1: 122 39% 49%;
+  --chart-2: 42 96% 56%;
+  --chart-3: 210 78% 52%;
+  --chart-4: 196 75% 42%;
+  --chart-5: 145 35% 45%;
+
+  /* Typography — Inter only (geometric sans). No display font split. */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --radius: 1.25rem;
+
+  /* Elevations — for hover-elevate utilities */
+  --button-outline: rgba(0, 0, 0, 0.06);
+  --badge-outline: rgba(0, 0, 0, 0.04);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0, 0, 0, 0.04);
+  --elevate-2: rgba(0, 0, 0, 0.08);
+
+  /* Shadows — soft Apple-style */
+  --shadow-2xs: 0px 1px 0px 0px hsl(0 0% 0% / 0.04);
+  --shadow-xs:  0px 1px 2px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm:  0px 2px 6px -1px hsl(0 0% 0% / 0.07);
+  --shadow:     0px 4px 14px -2px hsl(0 0% 0% / 0.09);
+  --shadow-md:  0px 8px 22px -4px hsl(0 0% 0% / 0.11);
+  --shadow-lg:  0px 16px 40px -10px hsl(0 0% 0% / 0.14);
+  --shadow-xl:  0px 24px 56px -14px hsl(0 0% 0% / 0.16);
+  --shadow-2xl: 0px 32px 72px -16px hsl(0 0% 0% / 0.2);
+
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+/* .dark kept for fallback consistency (unused in default MVP skin). */
+.dark {
+  --background: 222 30% 8%;
+  --foreground: 200 15% 92%;
+  --border: 220 18% 18%;
+  --card: 222 30% 12%;
+  --card-foreground: 200 15% 92%;
+  --card-border: 220 18% 22%;
+  --primary: 122 50% 58%;
+  --primary-foreground: 222 30% 8%;
+  --primary-border: hsl(122 50% 50%);
+  --muted: 220 18% 14%;
+  --muted-foreground: 215 12% 60%;
+  --muted-border: hsl(220 18% 18%);
+  --secondary: 220 18% 16%;
+  --secondary-foreground: 200 15% 92%;
+  --secondary-border: hsl(220 18% 20%);
+  --accent: 42 90% 60%;
+  --accent-foreground: 222 30% 8%;
+  --accent-border: hsl(42 90% 52%);
+  --destructive: 0 65% 56%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-border: hsl(0 65% 48%);
+  --popover: 222 30% 12%;
+  --popover-foreground: 200 15% 92%;
+  --popover-border: hsl(220 18% 22%);
+  --input: 220 18% 22%;
+  --ring: 122 50% 58%;
+  --chart-1: 122 50% 58%;
+  --chart-2: 42 90% 60%;
+  --chart-3: 210 78% 60%;
+  --chart-4: 196 75% 50%;
+  --chart-5: 145 45% 55%;
+  --sidebar: 222 30% 10%;
+  --sidebar-foreground: 200 15% 92%;
+  --sidebar-border: hsl(220 18% 18%);
+  --sidebar-primary: 122 50% 58%;
+  --sidebar-primary-foreground: 222 30% 8%;
+  --sidebar-primary-border: hsl(122 50% 50%);
+  --sidebar-accent: 220 18% 16%;
+  --sidebar-accent-foreground: 200 15% 92%;
+  --sidebar-accent-border: hsl(220 18% 20%);
+  --sidebar-ring: 122 50% 58%;
+  --button-outline: rgba(255, 255, 255, 0.06);
+  --badge-outline: rgba(255, 255, 255, 0.04);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.09);
+}
+
+/* ==========================================================================
+   BODY · nature background + light overlay
+   ========================================================================== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body {
+    height: 100%;
+  }
+  body {
+    @apply font-sans antialiased text-foreground;
+    color: hsl(var(--foreground));
+    background-color: #5C7185; /* fallback while photo loads */
+    background-image:
+      /* soft slate overlay so glass panels read against bright sky */
+      linear-gradient(180deg, rgba(35, 45, 60, 0.32), rgba(35, 45, 60, 0.55)),
+      url('/bg-meadow.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  /* Headings stay Inter — weight/size do the work, no separate display font. */
+  .font-display {
+    font-family: var(--font-sans);
+    letter-spacing: -0.022em;
+    font-weight: 600;
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}
+
+/* ==========================================================================
+   UTILITIES · glass / drawer / pill
+   ========================================================================== */
+@layer utilities {
+  input[type='search']::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+  .no-default-hover-elevate {}
+  .no-default-active-elevate {}
+
+  /* Frosted glass panel — the Hintology signature */
+  .glass {
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  /* Heavier glass for primary content card */
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  /* Dark transparent overlay used on chips against bright backgrounds */
+  .glass-dark {
+    background: rgba(30, 40, 50, 0.62);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: white;
+  }
+
+  /* Opaque drawer surface — pure white slab with soft shadow */
+  .drawer-surface {
+    background: #FFFFFF;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 24px 56px -16px rgba(0, 0, 0, 0.22);
+  }
+
+  /* Pill button shapes */
+  .pill {
+    border-radius: 9999px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .pill-dark {
+    background: rgba(30, 40, 50, 0.92);
+    color: #FFFFFF;
+  }
+  .pill-dark:hover {
+    background: rgba(15, 22, 32, 0.96);
+  }
+  .pill-light {
+    background: rgba(255, 255, 255, 0.85);
+    color: #1A1A1A;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .pill-light:hover {
+    background: #FFFFFF;
+  }
+  .pill-primary {
+    background: hsl(var(--primary));
+    color: white;
+  }
+  .pill-primary:hover {
+    background: hsl(var(--primary) / 0.92);
+  }
+
+  /* Mesh glow used on cards — kept for legacy */
+  .glow-mesh {
+    position: relative;
+  }
+  .glow-mesh::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 60%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Hide scrollbars on swipe rails */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    border-radius: inherit;
+    z-index: 999;
+  }
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
+    inset: -1px;
+  }
+}
